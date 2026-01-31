@@ -1,0 +1,164 @@
+// npd-view.js
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const npdId = urlParams.get('id');
+    const filter = localStorage.getItem('npdFilter') || '';
+    
+    if (npdId) {
+        loadNPDDetails(npdId);
+    } else if (filter) {
+        loadFilteredNPDs(filter);
+    }
+    
+    // Clear filter after use
+    localStorage.removeItem('npdFilter');
+});
+
+async function loadNPDDetails(npdId) {
+    try {
+        // Load NPD master data
+        const { data: npd, error } = await window.supabaseClient
+            .from('npd_master')
+            .select('*')
+            .eq('id', npdId)
+            .single();
+        
+        if (error) throw error;
+        
+        // Check if read-only (handover done)
+        if (npd.handover_done) {
+            document.querySelectorAll('input, select, textarea, button').forEach(el => {
+                if (!el.classList.contains('view-only')) {
+                    el.disabled = true;
+                }
+            });
+            document.getElementById('readOnlyAlert').style.display = 'block';
+        }
+        
+        // Populate master data
+        populateMasterData(npd);
+        
+        // Load related data
+        await loadRelatedData('tools', npdId, 'toolsContainer');
+        await loadRelatedData('gauges', npdId, 'gaugesContainer');
+        await loadRelatedData('trials', npdId, 'trialsContainer');
+        await loadRelatedData('sample_submissions', npdId, 'samplesContainer');
+        await loadRelatedData('ppap_submissions', npdId, 'ppapContainer');
+        await loadRelatedData('internal_documents', npdId, 'documentsContainer');
+        
+        // Update state machine
+        updateStateMachine(npd);
+        
+    } catch (error) {
+        console.error('Error loading NPD details:', error);
+        alert('Error loading NPD details');
+    }
+}
+
+async function updateStateMachine(npd) {
+    // This function implements the state machine logic
+    const currentStage = npd.current_stage;
+    let newStage = currentStage;
+    
+    // Check conditions for state transitions
+    switch(currentStage) {
+        case 'CREATED':
+            // Check if any tools are planned
+            const { data: tools } = await window.supabaseClient
+                .from('tools')
+                .select('status')
+                .eq('npd_id', npd.id);
+            
+            if (tools && tools.length > 0) {
+                newStage = 'TOOLING_PLANNED';
+            }
+            break;
+            
+        case 'TOOLING_PLANNED':
+            // Check if any tools are in progress
+            const { data: inProgressTools } = await window.supabaseClient
+                .from('tools')
+                .select('status')
+                .eq('npd_id', npd.id)
+                .eq('status', 'In Progress');
+            
+            if (inProgressTools && inProgressTools.length > 0) {
+                newStage = 'TOOLING_IN_PROGRESS';
+            }
+            break;
+            
+        case 'TOOLING_IN_PROGRESS':
+            // Check if any trials exist
+            const { data: trials } = await window.supabaseClient
+                .from('trials')
+                .select('id')
+                .eq('npd_id', npd.id);
+            
+            if (trials && trials.length > 0) {
+                newStage = 'TRIAL_ONGOING';
+            }
+            break;
+            
+        case 'TRIAL_ONGOING':
+            // Check if any samples submitted
+            const { data: samples } = await window.supabaseClient
+                .from('sample_submissions')
+                .select('id')
+                .eq('npd_id', npd.id);
+            
+            if (samples && samples.length > 0) {
+                newStage = 'SAMPLE_SUBMITTED';
+            }
+            break;
+            
+        case 'SAMPLE_SUBMITTED':
+            // Check if any PPAP submitted
+            const { data: ppap } = await window.supabaseClient
+                .from('ppap_submissions')
+                .select('id')
+                .eq('npd_id', npd.id);
+            
+            if (ppap && ppap.length > 0) {
+                newStage = 'PPAP_SUBMITTED';
+            }
+            break;
+    }
+    
+    // Update stage if changed
+    if (newStage !== currentStage) {
+        await window.supabaseClient
+            .from('npd_master')
+            .update({ current_stage: newStage })
+            .eq('id', npd.id);
+            
+        // Update UI
+        document.getElementById('currentStage').textContent = newStage.replace(/_/g, ' ');
+    }
+}
+
+async function updateDelayedStatus(npdId) {
+    // Check for delays in any phase
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check tool delays
+    const { data: delayedTools } = await window.supabaseClient
+        .from('tools')
+        .select('planned_completion_date')
+        .eq('npd_id', npdId)
+        .lt('planned_completion_date', today)
+        .neq('status', 'Approved');
+    
+    // Check trial delays
+    const { data: delayedTrials } = await window.supabaseClient
+        .from('trials')
+        .select('trial_date')
+        .eq('npd_id', npdId)
+        .lt('trial_date', today);
+    
+    if ((delayedTools && delayedTools.length > 0) || (delayedTrials && delayedTrials.length > 0)) {
+        await window.supabaseClient
+            .from('npd_master')
+            .update({ overall_status: 'Delayed' })
+            .eq('id', npdId);
+    }
+}

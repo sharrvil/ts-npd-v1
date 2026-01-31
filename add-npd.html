@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New NPD - Technospace Engineers</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load scripts in correct order -->
+    <script src="js/supabase-config.js" defer></script>
+    <script src="js/supabase-helpers.js" defer></script>
+    <script src="js/add-npd.js" defer></script>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="company-header">
+                    <h1>Technospace Engineers</h1>
+                </div>
+                <div class="project-title">
+                    <h2>Add New Product Development</h2>
+                </div>
+                <div class="user-menu">
+                    <a href="analytics.html" class="btn btn-outline">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Wizard Steps -->
+            <div class="wizard-steps" id="wizardSteps">
+                <!-- Steps will be dynamically generated -->
+            </div>
+
+            <!-- Form Container -->
+            <div class="card">
+                <form id="npdForm">
+                    <!-- Step content will be dynamically loaded here -->
+                </form>
+                
+                <!-- Navigation Buttons -->
+                <div class="card-footer">
+                    <div class="footer-left">
+                        <button type="button" id="btnSaveDraft" class="btn btn-outline">
+                            Save as Draft
+                        </button>
+                        <button type="button" id="btnSaveClose" class="btn btn-secondary">
+                            Save & Close
+                        </button>
+                    </div>
+                    <div class="footer-right">
+                        <button type="button" id="btnPrev" class="btn btn-outline" style="display: none;">
+                            ← Previous
+                        </button>
+                        <button type="button" id="btnNext" class="btn btn-primary">
+                            Save & Next →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
