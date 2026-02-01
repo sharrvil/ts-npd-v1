@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management - Technospace Engineers</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js" defer></script>
+    <script src="js/users.js" defer></script>
+    <style>
+        /* User Management Specific Styles */
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-on-track {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        
+        .status-delayed {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .status-pending {
+            background: #feebc8;
+            color: #c05621;
+        }
+        
+        .status-completed {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+            border: none;
+        }
+        
+        .btn-warning:hover {
+            background: #dd6b20;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #2d3748;
+        }
+        
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #718096;
+            background: none;
+            border: none;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .close-btn:hover {
+            color: #4a5568;
+            background: #f7fafc;
+        }
+        
+        .modal-body {
+            padding: 1.25rem;
+        }
+        
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+        }
+        
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .user-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .user-header h2 {
+                margin: 0;
+            }
+            
+            .table-container {
+                border-radius: 0;
+                box-shadow: none;
+            }
+            
+            .table-header {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 80vh;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+            
+            /* Mobile Card View */
+            .user-card {
+                background: white;
+                border-radius: 8px;
+                padding: 1.25rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                border: 1px solid #e2e8f0;
+            }
+            
+            #usersTable.mobile-table {
+                display: none;
+            }
+            
+            #usersTable.mobile-table + .mobile-cards {
+                display: block;
+            }
+            
+            .mobile-cards {
+                display: none;
+            }
+            
+            .user-info-row {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .user-info-row span:first-child {
+                color: #718096;
+                min-width: 24px;
+            }
+            
+            .user-actions {
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            
+            .user-actions .btn {
+                flex: 1;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .modal-body {
+                padding: 1rem;
+            }
+            
+            .modal-footer {
+                padding: 1rem;
+            }
+            
+            .user-card {
+                padding: 1rem;
+            }
+        }
+        
+        /* Loading Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Utility Classes */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .btn-outline:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="company-header">
+                    <h1>Technospace Engineers</h1>
+                </div>
+                <div class="project-title">
+                    <h2>User Management</h2>
+                </div>
+                <div class="user-menu">
+                    <a href="analytics.html" class="btn btn-outline">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="user-header">
+                <h2>System Users</h2>
+                <button id="addUserBtn" class="btn btn-primary">
+                    + Add New User
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <div class="table-header">
+                    <h3 style="margin: 0; color: #4a5568;">All Users</h3>
+                    <div style="font-size: 14px; color: #718096;">
+                        <span id="userCount">0</span> users
+                    </div>
+                </div>
+                
+                <!-- Desktop Table View -->
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Users will be loaded here -->
+                    </tbody>
+                </table>
+                
+                <!-- Mobile Card View Container -->
+                <div id="mobileCardsContainer" class="mobile-cards">
+                    <!-- Mobile cards will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">Add New User</h3>
+                <button class="close-btn" onclick="closeUserModal()">×</button>
+            </div>
+            <form id="userForm">
+                <div class="modal-body">
+                    <input type="hidden" id="userId" name="userId">
+                    
+                    <div class="form-group">
+                        <label for="employee_id">Employee ID *</label>
+                        <input type="text" id="employee_id" name="employee_id" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="full_name">Full Name *</label>
+                        <input type="text" id="full_name" name="full_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Department *</label>
+                            <select id="department" name="department" class="form-control" required>
+                                <option value="">Select Department</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Tool Room">Tool Room</option>
+                                <option value="Quality">Quality</option>
+                                <option value="Production">Production</option>
+                                <option value="Management">Management</option>
+                                <option value="IT">IT</option>
+                                <option value="Administration">Administration</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="role">Role *</label>
+                            <select id="role" name="role" class="form-control" required>
+                                <option value="">Select Role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Tool Room">Tool Room</option>
+                                <option value="QA">QA</option>
+                                <option value="Production">Production</option>
+                                <option value="Management">Management</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_active" name="is_active">
+                        <label for="is_active" style="margin: 0;">Active User</label>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to update user count
+        function updateUserCount(count) {
+            document.getElementById('userCount').textContent = count;
+        }
+        
+        // Update users.js to call this function
+        window.updateUserCount = updateUserCount;
+        
+        // Enhanced mobile table conversion
+        function convertTableToCards() {
+            const table = document.getElementById('usersTable');
+            const tbody = document.getElementById('usersTableBody');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            
+            if (window.innerWidth < 768) {
+                table.style.display = 'none';
+                mobileContainer.style.display = 'block';
+                
+                // Show loading in mobile container
+                if (tbody.innerHTML.includes('Loading')) {
+                    mobileContainer.innerHTML = tbody.innerHTML;
+                }
+            } else {
+                table.style.display = '';
+                mobileContainer.style.display = 'none';
+            }
+        }
+        
+        function revertTableFromCards() {
+            const table = document.getElementById('usersTable');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            
+            table.style.display = '';
+            mobileContainer.style.display = 'none';
+            mobileContainer.innerHTML = '';
+        }
+        
+        // Initialize mobile view
+        document.addEventListener('DOMContentLoaded', function() {
+            convertTableToCards();
+            
+            // Close modal when clicking outside
+            document.getElementById('userModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeUserModal();
+                }
+            });
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('userModal').style.display === 'flex') {
+                    closeUserModal();
+                }
+            });
+            
+            // Set default dates to today
+            document.getElementById('submission_date').value = new Date().toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>
