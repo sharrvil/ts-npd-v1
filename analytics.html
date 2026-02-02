@@ -2,90 +2,279 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NPD Analytics - Technospace Engineers</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js" defer></script>
-    <script src="js/analytics.js" defer></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Palette: Midnight & Neon */
+            --bg-dark: #030712;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --bg-hover: rgba(31, 41, 55, 0.9);
+            
+            --primary: #6366f1;   /* Indigo */
+            --accent: #38bdf8;    /* Sky Blue */
+            --border: rgba(255, 255, 255, 0.08);
+            
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            
+            --status-green: #10b981;
+            --status-yellow: #f59e0b;
+            --status-red: #ef4444;
+            --status-blue: #3b82f6;
+        }
+
+        /* --- Reset & Base --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            /* High Performance Background Gradient */
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.1) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .noise-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 50; opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- Navbar --- */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem;
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(3, 7, 18, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.75rem; }
+        .brand-logo {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px; display: grid; place-items: center; font-size: 0.9rem; color: white;
+        }
+        
+        .nav-links { display: flex; gap: 1.5rem; }
+        .nav-link { 
+            color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: 0.2s;
+            padding: 0.5rem 0.75rem; border-radius: 6px;
+        }
+        .nav-link:hover, .nav-link.active { color: white; background: rgba(255,255,255,0.05); }
+
+        /* --- Main Layout --- */
+        .main-container {
+            max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; width: 100%;
+        }
+
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+        
+        .btn-primary {
+            background: white; color: black; padding: 0.6rem 1.2rem;
+            border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.9rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+
+        /* --- Charts Grid (Placeholder for JS) --- */
+        .charts-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem; margin-bottom: 2rem;
+        }
+        
+        /* Style for injected chart cards */
+        .chart-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; height: 300px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- Table Section --- */
+        .table-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        .table-header {
+            padding: 1.5rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+        }
+
+        .table-title { font-size: 1.1rem; font-weight: 600; }
+
+        /* Custom Select */
+        .custom-select {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+            color: var(--text-main); padding: 0.5rem 1rem; border-radius: 8px;
+            outline: none; font-size: 0.875rem; cursor: pointer;
+        }
+        .custom-select:focus { border-color: var(--primary); }
+
+        /* Responsive Table */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        
+        th {
+            text-align: left; padding: 1rem 1.5rem;
+            color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);
+            font-size: 0.9rem; color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Status Badges */
+        .badge {
+            padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+            display: inline-block;
+        }
+        .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .badge-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+        /* Action Buttons within table */
+        .btn-icon {
+            color: var(--text-muted); padding: 0.4rem; border-radius: 6px;
+            transition: 0.2s; cursor: pointer; text-decoration: none; margin-right: 0.5rem;
+        }
+        .btn-icon:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; } /* Could add hamburger menu if needed */
+            .page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .btn-primary { width: 100%; justify-content: center; }
+            .table-header { flex-direction: column; align-items: flex-start; }
+            .custom-select { width: 100%; }
+        }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="company-header">
-                    <h1>Technospace Engineers</h1>
-                </div>
-                <div class="project-title">
-                    <h2>New Product Development Status</h2>
-                </div>
-                <div class="user-menu">
-                    <span>Welcome, User</span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="noise-overlay"></div>
 
-    <nav class="nav-tabs">
-        <div class="container">
-            <ul>
-                <li><a href="analytics.html" class="active">Dashboard</a></li>
-                <li><a href="add-npd.html">Add NPD</a></li>
-                <li><a href="documents.html">Documents</a></li>
-                <li><a href="users.html">Users</a></li>
-            </ul>
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <span>Technospace</span>
+        </div>
+        
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="analytics.html" class="nav-link active">Dashboard</a>
+            <a href="documents.html" class="nav-link">Documents</a>
+            <a href="users.html" class="nav-link">Team</a>
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted);">
+            <i class="fa-regular fa-user"></i>&nbsp; Engineer
         </div>
     </nav>
 
-    <main class="main-content">
-        <div class="container">
-            <div class="card-header" style="margin-bottom: 2rem;">
-                <h1 class="card-title">NPD Analytics Dashboard</h1>
-                <a href="add-npd.html" class="btn btn-primary">
-                    <span>➕</span> Add New NPD
-                </a>
+    <main class="main-container">
+        <div class="page-header">
+            <div>
+                <h1>NPD Dashboard</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                    Live tracking of development, tooling, and trials.
+                </p>
+            </div>
+            <a href="add-npd.html" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> New Project
+            </a>
+        </div>
+
+        <div class="charts-grid" id="chartsContainer">
             </div>
 
-            <div class="charts-grid" id="chartsContainer">
-                <!-- Charts will be dynamically loaded here -->
+        <div class="table-card">
+            <div class="table-header">
+                <div class="table-title">Active Projects</div>
+                <div class="filters">
+                    <select id="statusFilter" class="custom-select">
+                        <option value="">All Statuses</option>
+                        <option value="CREATED">Created</option>
+                        <option value="TOOLING_PLANNED">Tooling Planned</option>
+                        <option value="TOOLING_IN_PROGRESS">Tooling In Progress</option>
+                        <option value="TRIAL_ONGOING">Trial Ongoing</option>
+                        <option value="SAMPLE_SUBMITTED">Sample Submitted</option>
+                        <option value="PPAP_SUBMITTED">PPAP Submitted</option>
+                        <option value="PRODUCTION_RELEASED">Production Released</option>
+                    </select>
+                </div>
             </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">Active NPDs</h2>
-                    <div class="filters">
-                        <select id="statusFilter" class="form-control" style="width: auto;">
-                            <option value="">All Status</option>
-                            <option value="CREATED">Created</option>
-                            <option value="TOOLING_PLANNED">Tooling Planned</option>
-                            <option value="TOOLING_IN_PROGRESS">Tooling In Progress</option>
-                            <option value="TRIAL_ONGOING">Trial Ongoing</option>
-                            <option value="SAMPLE_SUBMITTED">Sample Submitted</option>
-                            <option value="PPAP_SUBMITTED">PPAP Submitted</option>
-                            <option value="PRODUCTION_RELEASED">Production Released</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="table" id="npdTable">
-                        <thead>
-                            <tr>
-                                <th>NPD No</th>
-                                <th>TS Part No</th>
-                                <th>Customer</th>
-                                <th>Current Stage</th>
-                                <th>Overall Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="npdTableBody">
-                            <!-- NPD rows will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
+            
+            <div class="table-wrapper">
+                <table id="npdTable">
+                    <thead>
+                        <tr>
+                            <th>NPD No</th>
+                            <th>TS Part No</th>
+                            <th>Customer</th>
+                            <th>Current Stage</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="npdTableBody">
+                        <tr>
+                            <td>NPD-2023-001</td>
+                            <td style="font-family: monospace; color: var(--accent);">TS-9982-A</td>
+                            <td>Tata Motors</td>
+                            <td><span class="badge badge-blue">Trial Ongoing</span></td>
+                            <td><span class="badge badge-yellow">Delayed</span></td>
+                            <td style="text-align: right;">
+                                <a href="#" class="btn-icon"><i class="fa-solid fa-eye"></i></a>
+                                <a href="#" class="btn-icon"><i class="fa-solid fa-pen"></i></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/analytics.js"></script>
+
+    <script>
+        // Optional: Simple script to handle Active state in Nav if strictly HTML
+        // (If using a router or JS framework, remove this)
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if(link.href === window.location.href) {
+                link.classList.add('active');
+            }
+        });
+    </script>
 </body>
-</html>
+</html> 

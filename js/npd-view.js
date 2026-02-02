@@ -141,13 +141,12 @@ async function loadNPDDetails(npdId) {
         hideLoading();
         
     } catch (error) {
-        console.error('Error loading NPD details:', error);
+        console.error('Error in loadNPDDetails:', error);
+        // FIX: Call showError properly
         showError('content', 'Failed to load NPD details. Please try again. Error: ' + error.message);
         hideLoading();
     }
-}
-
-// Populate master data in overview tab
+}// Populate master data in overview tab
 function populateMasterData(npd) {
     // Basic info
     document.getElementById('npdNo').textContent = npd.npd_no || '-';
