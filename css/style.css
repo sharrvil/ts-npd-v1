@@ -146,13 +146,11 @@ body {
 
 /* Cards */
 .card {
-  background: white;
-  border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
-  overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border-dark);
+    color: var(--text-main);
 }
+
 
 .card-header {
   display: flex;
@@ -1228,4 +1226,216 @@ textarea.form-control {
 .handover-info-row:last-child {
     border-bottom: none;
     margin-bottom: 0;
+}
+/* ===== Dashboard Bars ===== */
+
+.bar-wrapper {
+    margin-top: 1rem;
+}
+
+.bar-track {
+    position: relative;
+    height: 14px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.bar-value {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #000;               /* BLACK text */
+    pointer-events: none;
+}
+/* ===============================
+   DASHBOARD BAR CHARTS (FIX)
+   =============================== */
+
+.chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chart-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.bar-wrapper {
+    width: 100%;
+}
+
+.bar-track {
+    position: relative;
+    width: 100%;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 0%;
+    background: red; /* TEMP: forced visible */
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.bar-value {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #000;
+}
+/* --- Analytics Progress Bars --- */
+
+.chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.chart-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-main);
+}
+
+/* Progress bar layout */
+.bar-wrapper {
+    width: 100%;
+}
+
+.bar-track {
+    position: relative;
+    width: 100%;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+/* Actual fill */
+.bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.6s ease;
+}
+
+/* Text on bar */
+.bar-value {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    pointer-events: none;
+}
+
+/* =========================================================
+   DARK THEME OVERRIDES (NPD / DOCUMENTS THEME)
+   ========================================================= */
+
+:root {
+    --bg-midnight: #030712;
+    --bg-card: #111827;
+    --accent-indigo: #6366f1;
+    --accent-sky: #38bdf8;
+    --text-main: #f3f4f6;
+    --text-dim: #9ca3af;
+    --border-dark: rgba(255,255,255,0.08);
+}
+body {
+    background-color: var(--bg-midnight);
+    background-image:
+        radial-gradient(circle at 0% 0%, rgba(99,102,241,0.15) 0%, transparent 25%),
+        radial-gradient(circle at 100% 100%, rgba(56,189,248,0.1) 0%, transparent 25%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+    color: var(--text-main);
+}
+.form-label {
+    color: var(--text-dim);
+}
+
+.form-control {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border-dark);
+    color: #ffffff;
+}
+
+.form-control::placeholder {
+    color: var(--text-dim);
+}
+
+.form-control:focus {
+    border-color: var(--accent-sky);
+    box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+}
+.step-number {
+    background: #020617;
+    border-color: var(--border-dark);
+    color: var(--text-dim);
+}
+
+.step.active .step-number {
+    background: var(--accent-indigo);
+    color: white;
+}
+
+.step.completed .step-number {
+    background: #10b981;
+    color: white;
+}
+
+.step-label {
+    color: var(--text-dim);
+}
+.dynamic-row,
+.file-item,
+.form-note,
+.handover-section,
+.document-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-dark);
+    color: var(--text-main);
+}
+
+.file-upload {
+    border-color: var(--border-dark);
+}
+
+.file-upload:hover {
+    border-color: var(--accent-sky);
+    background: rgba(56,189,248,0.05);
 }

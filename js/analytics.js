@@ -91,19 +91,45 @@ function renderCharts(stats) {
     charts.forEach(chart => {
         const percentage = stats.total > 0 ? Math.round((chart.value / stats.total) * 100) : 0;
         
-        chartsHTML += `
-            <div class="chart-container" data-filter="${chart.filter}" style="cursor: pointer;">
-                <div class="chart-title">${chart.title}</div>
-                <div class="donut-chart" style="background: conic-gradient(
-                    ${chart.color} 0% ${percentage}%,
-                    #e2e8f0 ${percentage}% 100%
-                );">
-                    <div class="donut-hole"></div>
-                    <div class="chart-value">${chart.value}</div>
-                </div>
-                <div class="chart-label">${percentage}% of total NPDs</div>
-            </div>
-        `;
+chartsHTML += `
+    <div class="chart-container" data-filter="${chart.filter}" style="cursor:pointer;">
+        <div class="chart-title">${chart.title}</div>
+
+<div style="margin-top: 0.75rem;">
+    <div style="
+        position: relative;
+        width: 100%;
+        height: 14px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 999px;
+        overflow: hidden;
+    ">
+        <div style="
+            height: 100%;
+            width: ${percentage}%;
+            background: ${chart.color};
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        "></div>
+
+        <span style="
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+        ">
+            ${chart.value} (${percentage}%)
+        </span>
+    </div>
+</div>
+
+    </div>
+`;
+
     });
     
     chartsContainer.innerHTML = chartsHTML;
